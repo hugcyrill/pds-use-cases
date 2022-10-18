@@ -28,7 +28,7 @@ searcher:
   metric: val_IoU
   smaller_is_better: False
   max_length:
-    epochs: 25
+    epochs: 4
 min_validation_period:
   epochs: 1
 resources:
