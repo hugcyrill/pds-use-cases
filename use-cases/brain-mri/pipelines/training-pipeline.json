@@ -14,7 +14,7 @@
   },  
   "transform": {
     "cmd": ["/bin/sh"],
-    "stdin": ["python train.py --git-url https://git@github.com:/JordanNanos/works-with-determined.git --git-ref master --sub-dir pachyderm-seldon/use-case/brain-mri/experiment --config const.yaml --repo brain-mri-new --model brain-mri"],
+    "stdin": ["python train.py --git-url https://git@github.com:/hugcyrill/pds-use-cases.git --git-ref master --sub-dir use-cases/brain-mri/experiment --config const.yaml --repo brain-mri-data --model brain-mri"],
     "image": "hugcyrill/pds:train_0.0.2",
     "secrets": [
       {
