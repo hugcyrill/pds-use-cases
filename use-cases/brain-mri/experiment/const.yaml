@@ -1,4 +1,4 @@
-name: MRI-test1-on-prem-1GPU
+name: Pipeline-Run-Brain-MRI-1GPU
 workspace: Cyrill
 project: pipeline-brain-mri
 data:
