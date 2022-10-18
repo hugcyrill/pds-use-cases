@@ -28,7 +28,6 @@ data:
     pretrained_model_name: "bert-base-uncased"
     download_data: False
     task: "classification"
-    local_path: ./data/sentiment_data
     pachyderm:
         host:
         port:
@@ -36,3 +35,5 @@ data:
         branch:
         token:
 entrypoint: model_def:FinBERTPyTorch
+profiling:
+    enabled: true

@@ -1,5 +1,8 @@
 import os
+import shutil
 
+import python_pachyderm
+from python_pachyderm.proto.v2.pfs.pfs_pb2 import FileType
 import pandas as pd
 import torch
 from torch.utils.data import TensorDataset
@@ -7,23 +10,24 @@ from torch.utils.data import TensorDataset
 from utils import FinSentProcessor, convert_examples_to_features
 
 
-def load_and_cache_examples(data_dir: str, tokenizer, max_seq_length, phase):
+def load_and_cache_examples(val_path: str, train_path: str, data_dir: str, tokenizer, max_seq_length, phase):
     # Processor
     processors = {"finsent": FinSentProcessor}
     processor = processors["finsent"]()
 
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
+        
     if phase == "eval":
-        eval_url = "./data/sentiment_data/validation.csv"
+        #eval_url = data_dir + "/data/data/sentiment_data/validation.csv"
         eval_file = "eval.csv"
-        df = pd.read_csv(eval_url, on_bad_lines="skip", sep="\t", lineterminator="\n")
+        df = pd.read_csv(val_path, on_bad_lines="skip", sep="\t", lineterminator="\n")
         df = df.drop("Unnamed: 0", 1)
         df.to_csv(data_dir + "/" + eval_file, sep="\t")
     else:
-        train_url = "./data/sentiment_data/train.csv"
+        #train_url = data_dir + "/data/data/sentiment_data/train.csv"
         train_file = "train.csv"
-        df = pd.read_csv(train_url, on_bad_lines="skip", sep="\t", lineterminator="\n")
+        df = pd.read_csv(train_path, on_bad_lines="skip", sep="\t", lineterminator="\n")
         df = df.drop("Unnamed: 0", 1)
         df.to_csv(data_dir + "/" + train_file, sep="\t")
 
