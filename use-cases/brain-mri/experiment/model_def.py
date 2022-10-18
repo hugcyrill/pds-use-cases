@@ -37,7 +37,6 @@ class MRIUnetTrial(PyTorchTrial):
                     self.context.get_hparam("split_seed"),
                     self.context.get_hparam("validation_ratio"),
                 )
-                print("Successful dataset")
             except:
                 pass
 
