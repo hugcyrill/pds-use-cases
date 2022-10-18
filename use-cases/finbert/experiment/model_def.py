@@ -37,14 +37,14 @@ class FinBERTPyTorch(PyTorchTrial):
                 print("No data. Aborting training.")
                 raise InvalidHP("No data")
 
-        for file in files:
-            if "validation.csv" in str(file):
-                self.val_csv_path = file
-            if "train.csv" in str(file):
-                self.train_csv_path = file
+            for file in files:
+                if "validation.csv" in str(file):
+                    self.val_csv_path = file
+                if "train.csv" in str(file):
+                    self.train_csv_path = file
 
-        print(f"Found training CSV file at: {self.train_csv_path}")
-        print(f"Found validation CSV file at: {self.val_csv_path}")
+            print(f"Found training CSV file at: {self.train_csv_path}")
+            print(f"Found validation CSV file at: {self.val_csv_path}")
 
         self.config_class, self.tokenizer_class, self.model_class = constants.MODEL_CLASSES[
             self.context.get_hparam("model_type")
