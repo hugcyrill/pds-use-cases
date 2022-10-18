@@ -1,13 +1,14 @@
 import os
 from typing import Any, Dict, Sequence, Tuple, Union, cast
 
-import data
 import filelock
 import torch
 import torch.nn as nn
-from data import download_pach_repo
 from determined.pytorch import DataLoader, PyTorchTrial, PyTorchTrialContext
 from torch import optim
+
+import data
+from data import download_pach_repo
 
 TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
 
@@ -36,9 +37,10 @@ class MRIUnetTrial(PyTorchTrial):
                     self.context.get_hparam("split_seed"),
                     self.context.get_hparam("validation_ratio"),
                 )
+                print("Successful dataset")
             except:
                 pass
-        
+
         if training:
             try:
                 if not os.path.exists(full_dir):
@@ -66,15 +68,14 @@ class MRIUnetTrial(PyTorchTrial):
                 pass
         else:
             model = torch.hub.load(
-                        self.data_config["repo"],
-                        self.data_config["model"],
-                        in_channels=self.context.get_hparam("input_channels"),
-                        out_channels=self.context.get_hparam("output_channels"),
-                        init_features=self.context.get_hparam("init_features"),
-                        pretrained=self.context.get_hparam("pretrained"),
-                    )
+                self.data_config["repo"],
+                self.data_config["model"],
+                in_channels=self.context.get_hparam("input_channels"),
+                out_channels=self.context.get_hparam("output_channels"),
+                init_features=self.context.get_hparam("init_features"),
+                pretrained=self.context.get_hparam("pretrained"),
+            )
             self.model = self.context.wrap_model(model)
-
 
     def iou(self, pred, label):
         intersection = (pred * label).sum()
