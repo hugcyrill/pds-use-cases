@@ -6,6 +6,8 @@ COPY requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY ModelServer.py .
+COPY finbert.py .
+COPY utils.py .
 
 EXPOSE 9000
 

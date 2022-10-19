@@ -6,7 +6,6 @@ scikit-image==0.19.2
 python_pachyderm==7.3.0
 transformers==4.11.3
 sentencepiece==0.1.91
-scikit-learn==1.0.1
 nltk
 
 # This is required to fix an issue with Flask
