@@ -659,6 +659,7 @@ def finbert_predict(text, model, write_to_csv=False, path=None, use_gpu=False, g
             logging.info("after model.to.")
 
             logits = model(all_input_ids, all_attention_mask, all_token_type_ids)[0]
+            logging.info("after model call")
             logging.info(logits)
             logits = softmax(np.array(logits.cpu()))
             sentiment_score = pd.Series(logits[:, 0] - logits[:, 1])

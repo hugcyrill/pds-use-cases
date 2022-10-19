@@ -65,9 +65,12 @@ class ModelServer(object):
     def predict(
         self, X: Union[np.ndarray, List, str, bytes, Dict], names: Optional[List[str]], meta: Optional[Dict] = None
     ) -> Union[np.ndarray, List, str, bytes, Dict]:
-        logging.info(f"Received request : \n{X}")
+        logging.info(f"Received request : {X}")
 
         input_string = X[0]
+
+        logging.info(f"Input string : {input_string}")
+        logging.info(f"Type of Input string : {type(input_string)}")
 
         try:
             result = finbert_predict(input_string, self.model)
