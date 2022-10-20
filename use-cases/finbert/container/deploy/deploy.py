@@ -2,6 +2,7 @@ import argparse
 import os
 import time
 
+import xxlimited
 import yaml
 from seldon_deploy_sdk import (
     ApiClient,
@@ -20,6 +21,8 @@ from seldon_deploy_sdk import (
     PodSpec,
     PredictiveUnit,
     PredictorSpec,
+    ResourceList,
+    ResourceRequirements,
     SecretVolumeSource,
     SeldonDeployment,
     SeldonDeploymentsApi,
@@ -68,7 +71,10 @@ def create_client(secrets) -> ApiClient:
     # config.id_token = auth.authenticate()
     # print("Connected.")
 
-    return ApiClient(config)
+    auth = OIDCAuthenticator(config)
+    config.id_token = auth.authenticate()
+    api_client = ApiClient(configuration=config, authenticator=auth)
+    return api_client
 
 
 # =====================================================================================
@@ -89,68 +95,99 @@ def build_metadata(model):
 # =====================================================================================
 
 
-def create_deploy_descriptor(args, secrets, det, model):
-    return SeldonDeployment(
-        api_version="machinelearning.seldon.io/v1",
-        kind="SeldonDeployment",
-        metadata=ObjectMeta(name=args.deploy_name, namespace=secrets.namespace),
-        spec=SeldonDeploymentSpec(
-            name=args.deploy_name,
-            predictors=[
-                PredictorSpec(
-                    component_specs=[
-                        SeldonPodSpec(
-                            spec=PodSpec(
-                                containers=[
-                                    Container(
-                                        name=args.deploy_name + "-container",
-                                        image=args.serving_image,
-                                        volume_mounts=[
-                                            VolumeMount(name="config", mount_path="/app/config"),
-                                            VolumeMount(name="det-checkpoints", mount_path="/determined_shared_fs"),
-                                        ],
-                                        env=[EnvVar(name="MODEL_METADATA", value=build_metadata(model))],
-                                    )
-                                ],
-                                volumes=[
-                                    Volume(name="config", secret=SecretVolumeSource(secret_name="deployment-secret")),
-                                    Volume(
-                                        name="det-checkpoints",
-                                        host_path=HostPathVolumeSource(
-                                            path="/mnt/mapr_nfs/determined/det_checkpoints"
-                                        ),
-                                    ),
-                                ],
-                            )
-                        )
-                    ],
-                    name="default",
-                    replicas=1,
-                    graph=PredictiveUnit(
-                        name=args.deploy_name + "-container",
-                        type="MODEL",
-                        parameters=[
-                            Parameter("det_master", "STRING", det.master),
-                            Parameter("user", "STRING", det.username),
-                            Parameter("password", "STRING", det.password),
-                            Parameter("model_name", "STRING", model.name),
-                            Parameter("model_version", "STRING", model.version),
-                        ],
-                    ),
-                    traffic=100,
-                )
-            ],
-        ),
-    )
-
-
-# =====================================================================================
-
-
 def deploy_model(api_client, args, secrets, det, model):
     api_instance = SeldonDeploymentsApi(api_client)
 
-    descriptor = create_deploy_descriptor(args, secrets, det, model)
+    CPU_REQUESTS = "16"
+    MEMORY_REQUESTS = "32Gi"
+
+    CPU_LIMITS = "16"
+    MEMORY_LIMITS = "32Gi"
+
+    mldeployment = {
+        "kind": "SeldonDeployment",
+        "metadata": {"name": args.deploy_name, "namespace": secrets.namespace, "labels": {"fluentd": "true"}},
+        "apiVersion": "machinelearning.seldon.io/v1alpha2",
+        "spec": {
+            "name": args.deploy_name,
+            "annotations": {"seldon.io/engine-seldon-log-messages-externally": "true"},
+            "protocol": "seldon",
+            "predictors": [
+                {
+                    "componentSpecs": [
+                        {
+                            "spec": {
+                                "containers": [
+                                    {
+                                        "name": f"{args.deploy_name}-container",
+                                        "image": args.serving_image,
+                                        "env": [
+                                            {
+                                                "name": "MODEL_METADATA",
+                                                "value": build_metadata(model),
+                                            },
+                                        ],
+                                        "volumeMounts": [
+                                            {
+                                                "name": "det-checkpoints",
+                                                "mountPath": "/determined_shared_fs",
+                                            },
+                                        ],
+                                        "resources": {
+                                            "requests": {"cpu": CPU_REQUESTS, "memory": MEMORY_REQUESTS},
+                                            "limits": {"cpu": CPU_LIMITS, "memory": MEMORY_LIMITS},
+                                        },
+                                    },
+                                ],
+                                "volumes": [
+                                    {
+                                        "name": "det-checkpoints",
+                                        "hostPath": {"path": "/mnt/mapr_nfs/determined/det_checkpoints", "type": ""},
+                                    },
+                                ],
+                            }
+                        }
+                    ],
+                    "name": "default",
+                    "replicas": 1,
+                    "traffic": 100,
+                    "graph": {
+                        "name": f"{args.deploy_name}-container",
+                        "parameters": [
+                            {
+                                "name": "det_master",
+                                "value": det.master,
+                                "type": "STRING",
+                            },
+                            {
+                                "name": "user",
+                                "value": det.username,
+                                "type": "STRING",
+                            },
+                            {
+                                "name": "password",
+                                "value": det.password,
+                                "type": "STRING",
+                            },
+                            {
+                                "name": "model_name",
+                                "value": model.name,
+                                "type": "STRING",
+                            },
+                            {
+                                "name": "model_version",
+                                "value": model.version,
+                                "type": "STRING",
+                            },
+                        ],
+                        "children": [],
+                        "logger": {"mode": "all"},
+                    },
+                }
+            ],
+        },
+        "status": {},
+    }
 
     try:
         api_instance.delete_seldon_deployment(args.deploy_name, secrets.namespace)
@@ -159,7 +196,7 @@ def deploy_model(api_client, args, secrets, det, model):
 
     try:
         time.sleep(3)
-        api_instance.create_seldon_deployment(secrets.namespace, descriptor)
+        api_instance.create_seldon_deployment(secrets.namespace, mldeployment=mldeployment)
         print(f"Deployment '{deploy(args, secrets)}' created")
         return True
     except ApiException as e:
