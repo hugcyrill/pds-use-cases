@@ -126,6 +126,10 @@ def deploy_model(api_client, args, secrets, det, model):
                                                 "name": "MODEL_METADATA",
                                                 "value": build_metadata(model),
                                             },
+                                            {
+                                                "name": "GUNICORN_THREADS",
+                                                "value": "16",
+                                            },
                                         ],
                                         "volumeMounts": [
                                             {

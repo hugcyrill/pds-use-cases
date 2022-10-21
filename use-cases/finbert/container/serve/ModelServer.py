@@ -76,7 +76,6 @@ class ModelServer(object):
             result = finbert_predict(input_string, self.model)
             logging.info(f"Prediction type : {type(result)}")
             logging.info(f"Prediction : {result}")
-            print(type(result))
             return result
 
         except Exception as e:

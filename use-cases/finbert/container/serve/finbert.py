@@ -648,18 +648,13 @@ def finbert_predict(text, model, write_to_csv=False, path=None, use_gpu=False, g
         examples = [InputExample(str(i), sentence) for i, sentence in enumerate(batch)]
 
         features = convert_examples_to_features(examples, label_list, 64, tokenizer)
-        logging.info("Got the features.")
         all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long).to(device)
         all_attention_mask = torch.tensor([f.attention_mask for f in features], dtype=torch.long).to(device)
         all_token_type_ids = torch.tensor([f.token_type_ids for f in features], dtype=torch.long).to(device)
-        logging.info("Before no_grad.")
         with torch.no_grad():
-            logging.info("Before model.to.")
             model = model.to(device)
-            logging.info("after model.to.")
 
             logits = model(all_input_ids, all_attention_mask, all_token_type_ids)[0]
-            logging.info("after model call")
             logging.info(logits)
             logits = softmax(np.array(logits.cpu()))
             sentiment_score = pd.Series(logits[:, 0] - logits[:, 1])
@@ -672,12 +667,14 @@ def finbert_predict(text, model, write_to_csv=False, path=None, use_gpu=False, g
                 "sentiment_score": sentiment_score,
             }
 
-            batch_result = pd.DataFrame(batch_result)
-            result = pd.concat([result, batch_result], ignore_index=True)
+            return_list = [str(batch[0]), str(predictions), str(sentiment_score[0])]
 
-    result["prediction"] = result.prediction.apply(lambda x: label_dict[x])
-    if write_to_csv:
-        result.to_csv(path, sep=",", index=False)
+            # batch_result = pd.DataFrame(batch_result)
+            # result = pd.concat([result, batch_result], ignore_index=True)
+
+    # result["prediction"] = result.prediction.apply(lambda x: label_dict[x])
+    # if write_to_csv:
+    #    result.to_csv(path, sep=",", index=False)
 
     # Returning batch_result to get dict for Seldon (original was to return pd.DataFrame)
-    return batch_result
+    return return_list
