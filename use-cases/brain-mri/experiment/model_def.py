@@ -28,8 +28,6 @@ class MRIUnetTrial(PyTorchTrial):
 
             des = self.download_data(self.data_config, full_dir)
 
-            print(des[0])
-
             print("Download Directory = " + full_dir)
 
             self.train_dataset, self.val_dataset = data.get_train_val_datasets(
