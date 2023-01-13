@@ -22,23 +22,21 @@ class MRIUnetTrial(PyTorchTrial):
         full_dir = "/"
 
         if training:
-            try:
-                download_dir = self.data_config["download_directory"]
-                data_dir = self.data_config["data_dir"]
-                full_dir = os.path.join(full_dir, download_dir.strip("/"), data_dir.strip("/"))
 
-                des = self.download_data(self.data_config, download_dir)
+            download_dir = self.data_config["download_directory"]
+            data_dir = self.data_config["data_dir"]
+            full_dir = os.path.join(full_dir, download_dir.strip("/"), data_dir.strip("/"))
 
-                print("Download Directory = " + download_dir)
+            des = self.download_data(self.data_config, download_dir)
 
-                self.train_dataset, self.val_dataset = data.get_train_val_datasets(
-                    download_dir,
-                    data_dir,
-                    self.context.get_hparam("split_seed"),
-                    self.context.get_hparam("validation_ratio"),
-                )
-            except:
-                pass
+            print("Download Directory = " + download_dir)
+
+            self.train_dataset, self.val_dataset = data.get_train_val_datasets(
+                download_dir,
+                data_dir,
+                self.context.get_hparam("split_seed"),
+                self.context.get_hparam("validation_ratio"),
+            )
 
         if training:
             try:
