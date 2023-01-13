@@ -1,14 +1,13 @@
 import os
 from typing import Any, Dict, Sequence, Tuple, Union, cast
 
+import data
 import filelock
 import torch
 import torch.nn as nn
+from data import download_pach_repo
 from determined.pytorch import DataLoader, PyTorchTrial, PyTorchTrialContext
 from torch import optim
-
-import data
-from data import download_pach_repo
 
 TorchData = Union[Dict[str, torch.Tensor], Sequence[torch.Tensor], torch.Tensor]
 
